@@ -12,9 +12,11 @@ import Input from "../inputs/Input";
 import toast from "react-hot-toast";
 import Button from "../Button";
 import { signIn } from "next-auth/react";
+import useLoginModal from "@/app/hooks/useLoginModal";
 
 const RegisterModal = () => {
   const RegisterModal = useRegistrationModal();
+  const loginModal = useLoginModal();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -44,6 +46,11 @@ const RegisterModal = () => {
         setIsLoading(false);
       });
   };
+
+  const toggle = useCallback(() => {
+    RegisterModal.onClose();
+    loginModal.onOpen();
+  }, [loginModal, RegisterModal]);
 
   const bodyContent = (
     <div className="flex flex-col gap-4">
@@ -83,7 +90,7 @@ const RegisterModal = () => {
         outline
         label="Continue with Google"
         icon={FcGoogle}
-        onClick={() => {}}
+        onClick={() => signIn("google")}
       />
       <Button
         outline
@@ -102,7 +109,7 @@ const RegisterModal = () => {
         <div className="justify-center flex flex-row items-center gap-2">
           <div>Already have an account ?</div>
           <div
-            onClick={RegisterModal.onClose}
+            onClick={toggle}
             className="
               text-neutral-800
               cursor-pointer

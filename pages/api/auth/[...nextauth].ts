@@ -60,6 +60,71 @@ export const authOptions: AuthOptions = {
     strategy: "jwt",
   },
   secret: process.env.NEXTAUTH_SECRET,
+  callbacks: {
+    async signIn({ user, account }) {
+      if (!account) {
+        // If the account is null, block the sign-in attempt
+        console.error("Account is null or undefined.");
+        return false;
+      }
+
+      if (!user.email) {
+        console.error("User email is null or undefined.");
+        return false;
+      }
+
+      const existingUser = await prisma.user.findUnique({
+        where: { email: user.email },
+      });
+
+      if (existingUser) {
+        // Link the new provider to the existing user account
+        await prisma.account.upsert({
+          where: {
+            provider_providerAccountId: {
+              provider: account.provider,
+              providerAccountId: account.providerAccountId,
+            },
+          },
+          create: {
+            userId: existingUser.id,
+            provider: account.provider,
+            providerAccountId: account.providerAccountId,
+            type: account.type,
+            access_token: account.access_token,
+            refresh_token: account.refresh_token,
+            expires_at: account.expires_at,
+            token_type: account.token_type,
+            scope: account.scope,
+            id_token: account.id_token,
+            session_state: account.session_state,
+          },
+          update: {}, // No need to update anything
+        });
+        return true;
+      }
+      return true; // Allow sign-in for new users
+    },
+
+    async session({ session, user, token }) {
+      // Ensure the `id` is available either from `user` or `token`.
+      const userId = user?.id || token?.sub;
+
+      if (!userId) {
+        console.error("User ID is missing");
+        return session;
+      }
+
+      if (!session.user) {
+        console.log("No user found!");
+        return session;
+      }
+
+      session.user.id = userId;
+
+      return session;
+    },
+  },
 };
 
 export default NextAuth(authOptions);
