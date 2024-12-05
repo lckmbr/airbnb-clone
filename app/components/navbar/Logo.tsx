@@ -12,7 +12,7 @@ const Logo = () => {
         alt="logo"
         width={100}
         height={100}
-        src="./assets/images/Logo.svg"
+        src="/assets/images/Logo.svg"
       />
     </Link>
   );
